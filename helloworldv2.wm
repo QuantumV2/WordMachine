@@ -1,0 +1,17 @@
+/*
+    Hello World Example 2 (Word Machine)
+*/
+
+
+ciiiiiiiiipdty // H (72 = 9 * 8)
+ciiiiiiiiiiptiy // e (101 = 10 * 10 + 1)
+mmciiiiiiiiipiiityyb // ll (108 = 9 * 12)
+ciiiiiiiiiipitiyb // o (111 = 11 * 10 + 1)
+ciiiipiiiiiiity // comma (44 = 4 * 11)
+ciiiipiiiity // space (32 = 8 * 4)
+ciiiiiiiiiptiiiiiiy // W (87 = 9 * 9 + 6)
+myb // o (111)
+ciiiiiiiiiipitiiiiy // r (114 = 10 * 11 + 4)
+mmybb // l (108)
+ciiiiiiiiiipty // d (100 = 10 * 10)
+ciiiiiiiiiiipciiity // ! (33 = 11 * 3)
