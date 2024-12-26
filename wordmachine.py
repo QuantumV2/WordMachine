@@ -19,7 +19,7 @@ def clamp(n, min, max):
 class WordMachine:
     def stack_alert(self, name):
         if len(self.stack) <= 0:
-            #print(f"\nSTACK EMPTY, AT INSTRUCTION {name}")
+            print(f"\nSTACK EMPTY, AT INSTRUCTION {name}")
             return True
         return False
 
