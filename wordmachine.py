@@ -83,8 +83,9 @@ class WordMachine:
                 char = char.lower()
             #print(char)
             if char in self.charmap:
-                #print("\n", self.stack, self.tape, self.pointer, self.pc, char)
+
                 self.charmap[char]()
+                #print("\n", self.stack, self.tape, self.pointer, self.pc, char)
             self.pc += 1
 
     def ensure_cell_exists(self, index):
@@ -179,9 +180,9 @@ class WordMachine:
             a = self.stack.pop()
             b = self.stack.pop()
             c = self.stack.pop()
-            self.stack.append(b)
-            self.stack.append(c)
             self.stack.append(a)
+            self.stack.append(c)
+            self.stack.append(b)
 
     def do_subtract(self):
         if self.stack_alert("SUBTRACT"): return
@@ -189,7 +190,6 @@ class WordMachine:
 
     def do_times(self):
         if self.stack_alert("TIMES"): return
-        #print("\nHey", self.get_cell(self.pointer) * self.stack[-1], self.get_cell(self.pointer), self.stack[-1])
         self.tape[self.pointer] = self.get_cell(self.pointer) * self.stack.pop()
 
     def do_until(self):
@@ -218,10 +218,11 @@ class WordMachine:
         self.pc = end_pos
     def do_xchange(self):
         if len(self.stack) >= 2:
+            
             a = self.stack.pop()
             b = self.stack.pop()
-            self.stack.append(b)
             self.stack.append(a)
+            self.stack.append(b)
     
     def do_yield(self):
         print(chr(clamp(self.get_cell(self.pointer), 0, 0x10ffff)), end='')

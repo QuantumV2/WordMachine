@@ -52,6 +52,11 @@ def plugin_init(wordmachine):
         a = self.stack.pop()
         self.stack.append(max(a, b))
 
+    def modulo(self):
+        b = self.stack.pop()
+        a = self.stack.pop()
+        self.stack.append(a%b)
+
 
     setattr(wordmachine.__class__, 'rng', rng)
     setattr(wordmachine.__class__, 'rand_float', rand_float)
@@ -64,6 +69,7 @@ def plugin_init(wordmachine):
     setattr(wordmachine.__class__, 'abs', abs_val)
     setattr(wordmachine.__class__, 'min', min_val)
     setattr(wordmachine.__class__, 'max', max_val)
+    setattr(wordmachine.__class__, 'modulo', modulo)
 
     wordmachine.charmap['∂'] = wordmachine.rng      # Random int
     wordmachine.charmap['∑'] = wordmachine.rand_float # Random float
@@ -76,3 +82,4 @@ def plugin_init(wordmachine):
     wordmachine.charmap['|'] = wordmachine.abs      # Absolute value
     wordmachine.charmap['↓'] = wordmachine.min      # Minimum
     wordmachine.charmap['↑'] = wordmachine.max      # Maximum
+    wordmachine.charmap['%'] = wordmachine.modulo      # Modulo
