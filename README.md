@@ -4,8 +4,37 @@
 
 Word Machine is a programming language that operates on an infinite tape and a stack. Each instruction is a single character that performs operations like moving the tape pointer, manipulating stack values, and basic arithmetic.
 
+## Plugins
 
-### Instructions:
+Word Machine features a plugin system, allowing for easy customization of the language.
+
+Take for example, "Hello World" without any plugins:
+
+```
+ciiiiiiiiipdty 
+ciiiiiiiiiiptiy
+mmciiiiiiiiipiiityyb 
+ciiiiiiiiiipitiyb 
+ciiiipiiiiiiity
+ciiiipiiiity 
+ciiiiiiiiiptiiiiiiy
+myb 
+ciiiiiiiiiipitiiiiy
+mmybb 
+ciiiiiiiiiipty 
+ciiiiiiiiiiipciiity 
+```
+
+Confusing, isn't it?
+
+
+Now lets take a look at "Hello World" with the "types" plugin:
+```
+"Hello, World!" #13 klmkybde
+```
+Thats much shorter and less confusing! 
+
+## Instructions:
 a - add: Pop a value from the stack, add it to the current cell on the tape
 
 b - back: Move tape pointer left one cell
