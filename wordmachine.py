@@ -28,15 +28,17 @@ class WordMachine:
         self.stack = []
         self.loop_stack = []
         self.pointer = 0
-        self.running = False
-        self.debug = False
+        self.debug = True
+        self.pc = 0
+        self.program = ""
+        self.initprogram = ""
         self.charmap = {
             'a': self.do_add,
             'b': self.do_back,
             'c': self.do_clear,
             'd': self.do_decrement,
             'e': self.do_end,
-            'f': self.do_forward,
+            'f': self.do_fif,
             'g': self.do_get,
             'h': self.do_head,
             'i': self.do_increment,
@@ -47,7 +49,7 @@ class WordMachine:
             'n': self.do_negate,
             'o': self.do_output,
             'p': self.do_push,
-            'q': self.do_qsquare,
+            'q': self.do_query,
             'r': self.do_rotate,
             's': self.do_subtract,
             't': self.do_times,
@@ -61,31 +63,29 @@ class WordMachine:
         }
         pass
     
-    def execute(self, code: str):
-        i = 0
-        self.running = True
-        while i < len(code):
-            if i < len(code) - 1 and code[i:i+2] == '//':
-                while i < len(code) and code[i] != '\n':
-                    i += 1
+    def execute(self, code):
+        while self.pc < len(code):
+
+            if self.pc < len(code) - 1 and code[self.pc:self.pc+2] == '//':
+                while self.pc < len(code) and code[self.pc] != '\n':
+                    self.pc += 1
                 continue
                 
-            if i < len(code) - 1 and code[i:i+2] == '/*':
-                while i < len(code) - 1:
-                    if code[i:i+2] == '*/':
-                        i += 2
+            if self.pc < len(code) - 1 and code[self.pc:self.pc+2] == '/*':
+                while self.pc < len(code) - 1:
+                    if code[self.pc:self.pc+2] == '*/':
+                        self.pc += 2
                         break
-                    i += 1
+                    self.pc += 1
                 continue
-            char = code[i].lower()  
+            char = code[self.pc]  
+            if char.isascii():
+                char = char.lower()
+            #print(char)
             if char in self.charmap:
-                if self.debug:
-                    print("\n", self.stack, self.tape, self.pointer)
+                #print("\n", self.stack, self.tape, self.pointer, self.pc, char)
                 self.charmap[char]()
-            i += 1
-            if not self.running:
-                break
-
+            self.pc += 1
 
     def ensure_cell_exists(self, index):
         if index not in self.tape:
@@ -109,25 +109,15 @@ class WordMachine:
         self.tape[self.pointer] = self.get_cell(self.pointer) - 1
         
     def do_end(self):
-        if len(self.loop_stack) > 0:
-            loop_type, pos, *extra = self.loop_stack[-1]
-            
-            if loop_type == LoopType.NORMAL:
-                if self.get_cell(self.pointer) != 0:
-                    return pos
-            elif loop_type == LoopType.WHILE:
-                if len(self.stack) > 0 and self.stack[-1] != 0:
-                    return pos
-            elif loop_type == LoopType.UNTIL:
-                count = extra[0]
-                if count > 1:
-                    self.loop_stack[-1] = (loop_type, pos, count - 1)
-                    return pos
-                    
-            self.loop_stack.pop() 
+       pass
 
-    def do_forward(self): #alias
-        self.do_move()
+    def do_fif(self):
+        end_pos = self._find_matching_end( self.pc + 1)
+        loop_code = self.program[self.pc + 1:end_pos]
+        if self.stack and self.stack.pop() != 0:
+            self.pc = 0
+            self.execute(loop_code)
+        self.pc = end_pos
 
     def do_get(self):
         if self.stack_alert("GET"): return
@@ -141,15 +131,25 @@ class WordMachine:
 
     def do_jump(self):
         if self.stack_alert("JUMP"): return
-        self.pointer = self.stack.pop()
+        location = self.stack.pop()
+        if location >= 0:
+            self.pointer = location
+        else:
+            print("\nAttempt to jump to invalid location")
 
     def do_keep(self):
         if self.stack_alert("KEEP"): return
         self.tape[self.pointer] = self.stack.pop()
         
     def do_loop(self):
-        self.loop_stack.append((LoopType.NORMAL, self.pointer))
-
+        end_pos = self._find_matching_end(self.pc + 1)
+        loop_code = self.program[self.pc + 1:end_pos]
+        while self.get_cell(self.pointer) != 0:
+            self.pc = 0
+            self.program = loop_code
+            self.execute(self.program)
+            self.program = self.initprogram
+        self.pc = end_pos  
     def do_move(self):
         self.pointer += 1
 
@@ -164,11 +164,15 @@ class WordMachine:
 
     def do_push(self):
         self.stack.append(self.get_cell(self.pointer))
-    def do_qsquare(self):
-        if self.stack_alert("SQUARE"): return
-        val = self.stack.pop()
-        val *= val
-        self.stack.append(val)
+
+    def do_query(self):
+        if self.stack_alert("QUERY"): return
+        location = self.stack.pop()
+        if location >= 0:
+            self.tape[self.pointer] = self.tape[location]
+        else:
+            print("\nAttempting to query negative location")
+
 
     def do_rotate(self):
         if len(self.stack) >= 3:
@@ -189,19 +193,29 @@ class WordMachine:
         self.tape[self.pointer] = self.get_cell(self.pointer) * self.stack.pop()
 
     def do_until(self):
-        if self.stack_alert("UNTIL"): return
-        count = self.stack.pop()
-        self.loop_stack.append((LoopType.UNTIL, self.pointer, count))
+        end_pos = self._find_matching_end(self.pc + 1)
+        loop_code = self.program[self.pc + 1:end_pos]
+        if self.stack:
+            count = self.stack.pop()
+            self.pc = 0
+            self.program = loop_code*count
+            self.execute(self.program)
+            self.program = self.initprogram
+        self.pc = end_pos
 
     def do_value(self):
         if self.stack_alert("VALUE"): return
         self.stack.append(self.stack[-1])
     
     def do_while(self):
-        if self.stack_alert("WHILE"): return
-        if self.stack.pop() != 0:
-            self.loop_stack.append((LoopType.WHILE, self.pointer))
-
+        end_pos = self._find_matching_end( self.pc + 1)
+        loop_code = self.program[self.pc + 1:end_pos]
+        while self.stack and self.stack.pop() != 0:
+            self.pc = 0
+            self.program = loop_code
+            self.execute(self.program)
+            self.program = self.initprogram
+        self.pc = end_pos
     def do_xchange(self):
         if len(self.stack) >= 2:
             a = self.stack.pop()
@@ -214,3 +228,18 @@ class WordMachine:
 
     def do_zero(self):
         self.stack.append(0)
+
+    def _find_matching_end(self, start):
+
+        program = self.program
+        nesting = 1
+        pos = start
+        while pos < len(program):
+            if program[pos] in 'lwu': 
+                nesting += 1
+            elif program[pos] == 'e':
+                nesting -= 1
+                if nesting == 0:
+                    return pos
+            pos += 1
+        return len(program) 
